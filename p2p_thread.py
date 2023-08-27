@@ -1,6 +1,7 @@
+
+
 import socket
 import threading
-import random
 
 def handle_client(client_socket, client_address):
     print("Connected by", client_address)
@@ -29,18 +30,17 @@ def main():
     server_socket.listen(5)
     print("Server is listening for incoming connections...")
 
+    client_id = 1  # For tracking clients and assigning unique ports
+
     while True:
         client_socket, client_address = server_socket.accept()
 
-        # Create a new socket for the client
-        new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_port = base_port + client_id
+        client_id += 1
 
-        # Bind the new socket to a random port
-        client_port = base_port + random.randint(1, 65535)
-        new_socket.bind((client_address[0], client_port))
+        print(f"Connection from {client_address[0]}:{client_address[1]} assigned to port {client_port}")
 
-        # Start a new thread to handle the client
-        client_thread = threading.Thread(target=handle_client, args=(new_socket, client_address))
+        client_thread = threading.Thread(target=handle_client, args=(client_socket, client_address))
         client_thread.start()
 
 if __name__ == "__main__":
