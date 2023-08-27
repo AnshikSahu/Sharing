@@ -1,10 +1,18 @@
-
-
 import socket
 import threading
 
+# Function to handle sending messages to clients
+def send_messages(client_socket):
+    while True:
+        message = input("Enter a message to send to clients: ")
+        client_socket.sendall(message.encode('utf-8'))
+
 def handle_client(client_socket, client_address):
     print("Connected by", client_address)
+
+    # Start the thread for sending messages
+    send_thread = threading.Thread(target=send_messages, args=(client_socket,))
+    send_thread.start()
 
     while True:
         # Receive data from the client
@@ -13,16 +21,12 @@ def handle_client(client_socket, client_address):
             break
         print("Received from", client_address, ":", data)
 
-        # Send a response back to the client
-        response = "Server received: " + data
-        client_socket.sendall(response.encode('utf-8'))
-
     # Clean up the connection
     client_socket.close()
     print("Connection with", client_address, "closed")
 
 def main():
-    server_ip = '10.184.28.181'  # Listen on all available interfaces
+    server_ip = '10.184.31.235'  # Listen on all available interfaces
     base_port = 12345
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
