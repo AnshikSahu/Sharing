@@ -42,6 +42,7 @@ def handle_client(client_socket, client_address):
     # print("Connection with", client_address, "closed")
 
 def main():
+    global reply
     server_ip = '10.194.28.9'  # Listen on all available interfaces
     base_port = 12345
 
