@@ -23,12 +23,15 @@ def main():
             # sendmaster.start()
             if(response=="-1\n-1\n"):
                 continue
-            sendline(response)
+            reply=sendline(response)
+            if (reply=="1"):
+                s.close()
+                break
         except Exception as e:
             print("error: ", e)
             svayu.close()
             break
-        sleep(0.03)
+        # sleep(0.01)
     s.close()
     svayu.close()
 
@@ -59,7 +62,7 @@ def sendline(sendtext):
             print("error")
         # print(echo, sendtext)
         # close the connection
-    return
+    return echo
 
 if __name__ == "__main__":
     main()
