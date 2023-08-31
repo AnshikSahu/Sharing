@@ -33,14 +33,17 @@ def sendline(sendtext):
         # Define the port on which you want to connect
         port = 12345			
         # connect to the server on local computer
-        s.connect(("10.194.62.66", port))
+        s.connect(("10.194.28.9", port))
         
 
         s.send(sendtext.encode())
 
         # receive data from the server and decoding to get the string.
-        echo =  s.recv(1024).decode()
-        print(echo, sendtext)
+        echo =  s.recv(4096).decode()
+        if (echo=="1"):
+            s.close()
+            break
+        # print(echo, sendtext)
         # close the connection
         s.close()
     return
