@@ -5,7 +5,7 @@ global lines
 global reply
 global lim
 lines = {}
-lim=50
+lim=950
 reply='0'
 def handle_client(client_socket, client_address):
     global lines 
@@ -44,7 +44,7 @@ def my_client():
             if(response=="-1\n-1\n"):
                 continue
             reply=sendline(response)
-            logging.warning(reply)
+            # logging.warning(reply)
             if (reply=="1"):
                 break
         except Exception as e:
