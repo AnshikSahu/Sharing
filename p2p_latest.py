@@ -50,7 +50,7 @@ def my_client():
             if (reply=="1"):
                 break
         except Exception as e:
-            print("error: ", e)
+            print("error: ", e,response)
             svayu.close()
             break
     print("Thread Closed")
@@ -84,10 +84,9 @@ def main():
     print("Server is listening for incoming connections...")
     my_thread = threading.Thread(target=my_client)
     my_thread.start()
-    client_socket, client_address = server_socket.accept()
+    my_thread.join()
     # client_thread = threading.Thread(target=handle_client, args=(client_socket, client_address))
     # client_thread.start()
-    handle_client(client_socket,client_address)
     # client_socket1, client_address1 = server_socket.accept()
     # client_thread1 = threading.Thread(target=handle_client, args=(client_socket1, client_address1))
     # client_thread1.start()
@@ -99,11 +98,11 @@ def main():
     print("starting to submit the lines")
     svayu.sendall(b"SUBMIT\nKASHISH@COL334-672\n1000\n")
     for i in range(0,1000):
-        line=f"{i}\n{lines[i+1]}\n"
+        line=f"{i}\n{lines[i]}\n"
         svayu.sendall(line.encode())
     resp=svayu.recv(4096).decode('utf-8').split()
     print(resp)
     svayu.close()
-    print('\n'.join(lines.values()))
+    # print('\n'.join(lines.values()))
 if __name__ == "__main__":
     main()
