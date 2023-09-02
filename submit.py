@@ -9,7 +9,7 @@ with open('output.txt', "r") as f:
         submission_message = f"SUBMIT\n{entry_id}\n{len(lines)}\n"
         svayu.sendall(submission_message.encode())
         for line_number, line in enumerate(lines):
-            submission_message = f"{line_number+1}\n{line}\n"
+            submission_message = f"{line_number+1}\n{line}"
             svayu.sendall(submission_message.encode())
 
         # Send the submission message to the server
