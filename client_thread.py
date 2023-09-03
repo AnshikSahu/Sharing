@@ -3,11 +3,17 @@ import logging
 from time import sleep
 s = socket.socket()	
 port = 12345			
-s.connect(("10.194.28.9", port))
+s.connect(("10.194.25.90", port))
 def main():
     global s
     svayu = socket.socket()
-    svayu.connect(("vayu.iitd.ac.in", 9801))
+    reply = s.recv(4096).decode('utf-8')
+    while reply != "OK":
+        reply = s.recv(4096).decode('utf-8')
+
+    svayu.connect(("10.17.51.115", 9801))
+    svayu.sendall(b"SESSION RESET\n")
+    reply1=svayu.recv(4096).decode('utf-8')
     while True:
         try:
             svayu.sendall(b"SENDLINE\n")
