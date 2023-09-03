@@ -1,14 +1,16 @@
 import socket
 import threading
 import logging
+# import time
 global lines 
 global reply
 global lim
+# time_start = time.time()
 lines = {}
 lim=1000
 reply='0'
 svayu = socket.socket()
-svayu.connect(("vayu.iitd.ac.in", 9801))
+svayu.connect(("10.17.7.134", 9801))
 def handle_client(client_socket, client_address):
     global lines 
     global reply
@@ -32,17 +34,22 @@ def handle_client(client_socket, client_address):
             client_socket.sendall(reply.encode())
         except Exception as e:
             print("error: ", e)
-            print(data)
+            print(data,reply)
     print("Thread Closed")
     client_socket.close()
 
 def my_client():
     global svayu
     prev=-1
+    svayu.sendall(b"SESSION RESET\n")
+    reply_1 = svayu.recv(4096).decode('utf-8')
     while True:
         try:
             svayu.sendall(b"SENDLINE\n")
             response = svayu.recv(4096).decode('utf-8')
+            while (response[-1] != '\n'):
+                response += svayu.recv(4096).decode('utf-8')
+
             if(response=="-1\n-1\n"):
                 continue
             reply=sendline(response,prev)
@@ -67,7 +74,7 @@ def sendline(data,prev):
         if(line_no==-1): return '0'
         if line_no not in lines.keys(): lines[line_no] = line
         l=len(lines)
-        logging.warning(l)
+        # logging.warning(l)
         if(l==lim): reply='1'
     except: lines[prev]=lines[prev]+data
     return reply
@@ -103,6 +110,7 @@ def main():
     resp=svayu.recv(4096).decode('utf-8').split()
     print(resp)
     svayu.close()
+    # print(time.time() - time_start)
     # print('\n'.join(lines.values()))
 if __name__ == "__main__":
     main()
