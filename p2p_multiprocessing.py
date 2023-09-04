@@ -1,5 +1,6 @@
 import socket
 import logging
+import json
 from multiprocess import Manager, Process, Value
 
 # Define global variables
@@ -37,6 +38,8 @@ def handle_client(client_socket, client_address):
         except Exception as e:
             print("error: ", e)
             print(data)
+    data_to_send = json.dumps(lines)
+    client_socket.send(data_to_send.encode())
     print("Thread Closed")
     client_socket.close()
 
@@ -80,7 +83,7 @@ def main():
     global reply
     global lines
     global svayu
-    server_ip = '10.194.25.90'  # Listen on all available interfaces
+    server_ip = '10.194.60.95'  # Listen on all available interfaces
     base_port = 12345
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((server_ip, base_port))
