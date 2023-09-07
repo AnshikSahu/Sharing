@@ -185,6 +185,9 @@ def recv_from_client(id):
                     queues[i].put(b"DONE")
 
 def get():
+    global lines
+    global lim
+    global vayu_socket
     start = time.time()
     while (len(lines) != lim):
         curr = time.time()
@@ -217,7 +220,8 @@ def get():
 def parse(data_string):
     # lines: bit_string -> bit_string (line_no -> line)
     global lines
-    gl
+    global num_clients
+    global queues
 
     try:
         line_no=b""
@@ -253,6 +257,13 @@ def submit():
 
 def main():
     global num_clients
+    global lim
+    global active_clients
+    global lines
+    global done
+    global queues
+    global clients_send
+    global clients_recv
     
     vayu_connect()
     for i in range(1,num_clients+1):
