@@ -21,6 +21,8 @@ recv_socket=None
 vayu_socket=None
 
 global lines
+global recv_status
+recv_status=False
 lines={}
 lim=1000
 
@@ -71,7 +73,7 @@ def main():
     
     send_socket=client_connect(id+b'a')
     recv_socket=client_connect(id+b'b')
-        
+
     vayu_connect()
     logging.warning("Connected to all sockets")
     
@@ -166,20 +168,27 @@ def send(response):
 def recv():
     # client stores the line in the local dictionary
     global lines
+    global recv_status
+    global recv_socket
+    recv_socket.settimeout(2)
     while len(lines) != 1000:
-        response = recv_socket.recv(1024)
         try:
-            line_no=b""
-            index=0
-            while (response[index]!=10):
-                index+=1
-            line_no=response[:index]
-            if line_no not in lines.keys():
-                lines[line_no] = response
-                logging.warning(len(lines))
-            recv_socket.sendall(b"OK")
-        except Exception as e:
-            print("error: ", e)
+            response = recv_socket.recv(1024)
+            try:
+                if (response == b"DONE")
+                line_no=b""
+                index=0
+                while (response[index]!=10):
+                    index+=1
+                line_no=response[:index]
+                if line_no not in lines.keys():
+                    lines[line_no] = response
+                    logging.warning(len(lines))
+                recv_socket.sendall(b"OK")
+            except Exception as e:
+                print("error: ", e)
+        except:
+            client_connect(id+b'b')
         
 def submit():
     global lines

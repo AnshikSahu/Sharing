@@ -1,0 +1,2 @@
+1. use the global variable no_of_lines rather than using the figure 1000
+2. start the session only once mutual connections have been established
