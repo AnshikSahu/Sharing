@@ -1,4 +1,4 @@
-master_ip='10.194.1.207'
+ master_ip='10.194.1.207'
 master_port=8001
 vayu_ip='10.17.6.5'
 vayu_port=9801
