@@ -72,10 +72,10 @@ def main():
     global send_socket
     global recv_socket
     global vayu_socket
-    global id
+    global my_id
     
-    send_socket=client_connect(id,b'#1')
-    recv_socket=client_connect(id,b'#2')
+    send_socket=client_connect(my_id,b'#1')
+    recv_socket=client_connect(my_id,b'#2')
 
     vayu_connect()
     logging.warning("Connected to all sockets")
