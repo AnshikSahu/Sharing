@@ -1,6 +1,6 @@
 master_ip='10.194.1.207'
 master_port=8000
-vayu_ip='10.17.6.5'
+vayu_ip='10.17.7.218'
 vayu_port=9801
 my_id=1
 
@@ -90,7 +90,6 @@ def main():
 
     # wait for threads to finish
     while(len(lines)<lim):
-        logging.warning(len(lines))
         continue
     
     submit_thread=threading.Thread(target=submit)
@@ -132,7 +131,7 @@ def get():
                     if response == b'-1\n\n':
                         start=old
                         break
-                    if(response_new==b'' or response_new[-1]==10):
+                    if(response_new[-1]==10):
                         parse_thread=threading.Thread(target=parse,args=(response,))
                         parse_thread.start()
                         break
@@ -143,8 +142,11 @@ def parse(data_string):
     try:
         line_no=b""
         index=0
-        while (data_string[index]!=10):
+        
+        while (index<len(data_string) and data_string[index]!=10 ):
+            print(data_string[index])
             index+=1
+        # data_string.split('\n')[0]
         line_no=data_string[:index]
         if line_no not in lines.keys():
             lines[line_no] = data_string
@@ -156,16 +158,16 @@ def parse(data_string):
 def send(response):
     # this function is called in the parse function where you send a line you received from vayu to the master
     global send_socket
-    global id
+    global my_id
     for _ in range(10):
         try:
             send_socket.sendall(response)
-            reply = send_socket.recv(1024)
+            reply = send_socket.recv(4096)
             if reply == b'OK':
                 return
         except:
             continue
-    client_connect(id+b'#1')
+    client_connect(my_id,b'#1')
     send(response)
 
 def recv():
@@ -173,10 +175,12 @@ def recv():
     global lines
     global recv_status
     global recv_socket
+    global lim
+    global my_id
     recv_socket.settimeout(2)
     while len(lines) != lim:
         try:
-            response = recv_socket.recv(1024)
+            response = recv_socket.recv(4096)
             try:
                 if (response == b"DONE"):
                     if (len(lines) == lim):
@@ -191,7 +195,8 @@ def recv():
                 else:
                     line_no=b""
                     index=0
-                    while (response[index]!=10):
+                    while (index<len(response) and response[index]!=10):
+                        print(response[index]==b'\n')
                         index+=1
                     line_no=response[:index]
                     if line_no not in lines.keys():
@@ -199,9 +204,9 @@ def recv():
                         logging.warning(len(lines))
                     recv_socket.sendall(b"OK")
             except Exception as e:
-                print("error: ", e)
+                print("error1: ", e)
         except:
-            client_connect(id+b'#2')
+            client_connect(my_id,b'#2')
         
 def submit():
     global lines
@@ -210,7 +215,7 @@ def submit():
     for _ in range(10):
         if status == b"SUCCESS":
             break
-        vayu_socket.sendall(b"SUBMIT\nKASHISH@COL334-672\n"+str(lim)+"\n")
+        vayu_socket.sendall(b"SUBMIT\nKASHISH@COL334-672\n"+bytes(lim,'utf-8')+b"\n")
         for i in lines.values():
             vayu_socket.sendall(i)
         status = vayu_socket.recv(4096).split(b'\n')[1]
