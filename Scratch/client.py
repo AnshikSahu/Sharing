@@ -1,6 +1,6 @@
-master_ip='10.194.1.207'
+master_ip='10.194.20.195'
 master_port=8000
-vayu_ip='10.17.7.218'
+vayu_ip='10.17.51.115'
 vayu_port=9801
 my_id=1
 

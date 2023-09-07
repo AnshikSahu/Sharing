@@ -3,6 +3,7 @@ import threading
 import logging
 import time
 from queue import Queue
+import sys
 
 clients_send={}
 clients_recv={}
@@ -14,9 +15,9 @@ num_clients=1
 active_clients_send=0
 active_clients_recv=0
 
-my_ip='10.194.1.207'
+my_ip='10.194.4.246'
 my_port_begin=8000
-vayu_ip='10.17.7.218'
+vayu_ip='10.17.7.134'
 vayu_port=9801
 vayu_=(vayu_ip,vayu_port)
 
@@ -140,7 +141,7 @@ def send_to_client(id):
     global active_clients
 
     curr_queue = queues[id]
-    curr_socket = clients_send[id]
+    curr_socket = clients_recv[id]
     curr_socket.settimeout(0.5)
     while not done[id]:
         while curr_queue.qsize() > 0:
@@ -168,14 +169,14 @@ def send_to_client(id):
 def recv_from_client(id):
     #receives the messages from the client and handles them (puts in queue)
     global queues
-    global clients_recv
+    global clients_send
     global lines
     global lim
     global num_clients
 
     while len(lines) < lim:
         try:
-            socket = clients_recv[id]
+            socket = clients_send[id]
             response = socket.recv(4096)
             index=0
             while (response[index]!=10):
@@ -254,11 +255,11 @@ def submit():
     for _ in range(10):
         if status == b"SUCCESS":
             break
-        vayu_socket.sendall(b"SUBMIT\nKASHISH@COL334-672\n"+bytes(str(lim),'utf-8')+b"\n")
+        vayu_socket.sendall(b"SUBMIT\nKASHISH@COL334-672\n"+bytes(lim,'utf-8')+b"\n")
         for i in lines.values():
             vayu_socket.sendall(i)
-        status = vayu_socket.recv(4096).split(b'\n')[1]
-    if(status==b"SUCCESS"):
+        status = vayu_socket.recv(4096).split(b' ')[1]
+    if(status==b"SUCCESS:"):
         print("SUCCESS")
     else:
         print("FAILED")
