@@ -1,6 +1,6 @@
-master_ip='10.194.20.195'
+master_ip='10.194.4.246'
 master_port=8000
-vayu_ip='10.17.51.115'
+vayu_ip='10.17.7.134'
 vayu_port=9801
 my_id=1
 
@@ -142,11 +142,14 @@ def parse(data_string):
     try:
         line_no=b""
         index=0
-        
-        while (index<len(data_string) and data_string[index]!=10 ):
-            print(data_string[index])
-            index+=1
-        # data_string.split('\n')[0]
+        print("printing the data string passed in parse function ",data_string)
+        try:
+            while (data_string[index]!=10):
+                print(data_string[index])
+                index+=1
+        except:
+            print("error:" , data_string[index])
+            exit()
         line_no=data_string[:index]
         if line_no not in lines.keys():
             lines[line_no] = data_string
@@ -177,11 +180,12 @@ def recv():
     global recv_socket
     global lim
     global my_id
-    recv_socket.settimeout(2)
+    # recv_socket.settimeout(2)
     while len(lines) != lim:
         try:
             response = recv_socket.recv(4096)
             try:
+                print("printing the response passed in parse function ",response)
                 if (response == b"DONE"):
                     if (len(lines) == lim):
                         recv_socket.sendall(b"DONE")
@@ -195,8 +199,8 @@ def recv():
                 else:
                     line_no=b""
                     index=0
-                    while (index<len(response) and response[index]!=10):
-                        print(response[index]==b'\n')
+                    
+                    while (response[index]!=10):
                         index+=1
                     line_no=response[:index]
                     if line_no not in lines.keys():
@@ -204,7 +208,7 @@ def recv():
                         logging.warning(len(lines))
                     recv_socket.sendall(b"OK")
             except Exception as e:
-                print("error1: ", e)
+                print("error1: ", e, response)
         except:
             client_connect(my_id,b'#2')
         
@@ -218,8 +222,8 @@ def submit():
         vayu_socket.sendall(b"SUBMIT\nKASHISH@COL334-672\n"+bytes(lim,'utf-8')+b"\n")
         for i in lines.values():
             vayu_socket.sendall(i)
-        status = vayu_socket.recv(4096).split(b'\n')[1]
-    if(status==b"SUCCESS"):
+        status = vayu_socket.recv(4096).split(b' ')[1]
+    if(status==b"SUCCESS:"):
         print("SUCCESS")
     else:
         print("FAILED")
