@@ -219,3 +219,6 @@ def submit():
     else:
         print("FAILED")
     vayu_socket.close()
+
+if __name__=="__main__":
+    main()
