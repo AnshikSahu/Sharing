@@ -83,20 +83,13 @@ def main():
     global vayu_socket
     global my_id
     
-    try:
-        send_socket=client_connect(my_id,b'#1')
-        recv_socket=client_connect(my_id,b'#2')
-        while True:
-            reply=recv_socket.recv(4096)
-            if reply==b"START":
-                break
-            time.sleep(0.01)
-    except:
-        logging.error("Connection to master failed")
-    try:
-        vayu_connect()
-    except:
-        logging.error("Connection to vayu failed")
+    send_socket=client_connect(my_id,b'#1')
+    recv_socket=client_connect(my_id,b'#2')
+    while True:
+        reply=recv_socket.recv(4096)
+        if reply==b"START":
+            break
+    vayu_connect()
     logging.warning("Connected to all sockets")
     
     # start threads
