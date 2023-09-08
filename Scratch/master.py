@@ -9,14 +9,14 @@ clients_recv={}
 done={}
 queues={} # queues[id] is the queue for client id
 lines={} 
-lim=100
+lim=10
 num_clients=1
 active_clients_send=0
 active_clients_recv=0
 
 my_ip='10.194.20.195'
 my_port_begin=8000
-vayu_ip='10.17.7.134'
+vayu_ip='10.17.51.115'
 vayu_port=9801
 vayu_=(vayu_ip,vayu_port)
 
@@ -40,7 +40,8 @@ def vayu_connect():
         except:
             time.sleep(0.001)
             continue
-
+    # print("exited the vayu connect funtcion ")
+    
 def client_connect_send(id):
     global clients_send
     global queues
@@ -53,27 +54,32 @@ def client_connect_send(id):
     done[id]=False
     queues[id]=Queue()
     id_=bytes(str(id),'utf-8')+b'#1'
+    i = 0
     while(not done[id]):
         print("waiting for client "+str(id))
-        print(done[id])
         try:
             conn, addr=_socket.accept()
             reply=conn.recv(4096)
             if(reply!=id_):
+                print("bt")
                 conn.close()
                 continue
             for _ in range(10):
+                print("hi")
                 try:
                     conn.sendall(b"OK")
                     if(id in clients_send):
                         try:
+                            print("active user inc")
                             clients_send[id].close()
                             active_clients_send-=1
                         except:
+                            print("in the except where pass has been used")
                             pass
                     clients_send[id]=conn
                     active_clients_send+=1
                     logging.warning("connected to client for send "+str(id))
+                    print("going to the break statemtn which will end the for loop")
                     break
                 except:
                     time.sleep(0.001)
@@ -82,12 +88,19 @@ def client_connect_send(id):
             try:
                 conn.close()
             except:
+                print("in the except of except ")
                 pass
             time.sleep(0.001)
             continue
         time.sleep(0.001)
+        i += 1
+    print(done[id])
+    print("dshgvfrshugeshu")
+    print("exited the client connect send function ")
     clients_send[id].close()
     _socket.close()
+    print("exited the client connect send function ")
+    return 
 
 def client_connect_recv(id):
     global clients_recv
@@ -132,7 +145,8 @@ def client_connect_recv(id):
     while not done[id]:
         time.sleep(0.001)
     clients_recv[id].close()
-    _socket.close()             
+    _socket.close()
+    print("exited the client connect recv function ")             
 
 def send_to_client(id):
     #sends the messages in the queue of client id to the client
@@ -185,6 +199,7 @@ def recv_from_client(id):
                 response_new = socket.recv(4096)
                 response+=response_new
                 if(response_new[-1]==10):
+                    socket.sendall(b"OK")
                     break
                 if(response_new==b''):
                     break
