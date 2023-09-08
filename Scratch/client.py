@@ -1,4 +1,4 @@
-master_ip='10.194.39.113'
+master_ip='10.194.20.3'
 master_port=8000
 vayu_ip='10.17.6.5'
 vayu_port=9801
@@ -23,7 +23,7 @@ global lines
 global recv_status
 recv_status=False
 lines={}
-lim=5
+lim=1000
 
 def vayu_connect():
     global vayu_socket
@@ -105,7 +105,7 @@ def main():
 def get():
     # get lines from vayu 
     start = time.time()
-    while (len(lines) != lim):
+    while (len(lines) < lim):
         curr = time.time()
         #function which caters to the rate limit on vayu
         if (curr - start >= 0.01):
@@ -181,7 +181,7 @@ def recv():
     global lim
     global my_id
     # recv_socket.settimeout(2)
-    while len(lines) != lim:
+    while len(lines) < lim:
         try:
             response=b''
             while True:
@@ -197,7 +197,7 @@ def recv():
                 if (response == b"DONE"):
                     print("i went inside here")
                     print(len(lines))
-                    if (len(lines) == lim):
+                    if (len(lines) >= lim):
                         print("i went inside")
                         recv_socket.sendall(b"DONE")
                     else:
