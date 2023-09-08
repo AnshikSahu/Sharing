@@ -23,7 +23,7 @@ global lines
 global recv_status
 recv_status=False
 lines={}
-lim=10
+lim=1000
 
 def vayu_connect():
     global vayu_socket
@@ -187,7 +187,6 @@ def recv():
     # recv_socket.settimeout(2)
     while len(lines) < lim:
         try:
-            print(len(lines))
             response=b''
             while True:
                 response_new = recv_socket.recv(4096)
@@ -201,7 +200,6 @@ def recv():
             try:
                 if (response == b"DONE"):
                     print("i went inside here")
-                    print(len(lines))
                     if (len(lines) >= lim):
                         print("i went inside")
                         recv_socket.sendall(b"DONE")
