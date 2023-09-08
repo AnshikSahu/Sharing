@@ -9,12 +9,12 @@ clients_recv={}
 done={}
 queues={} # queues[id] is the queue for client id
 lines={} 
-lim=10
+lim=1000
 num_clients=1
 active_clients_send=0
 active_clients_recv=0
 
-my_ip='10.194.20.195'
+my_ip='10.194.20.3'
 my_port_begin=8000
 vayu_ip='10.17.51.115'
 vayu_port=9801
@@ -50,7 +50,7 @@ def client_connect_send(id):
     # opens a connection with the id_ client for sending
     _socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     _socket.bind((my_ip,my_port_begin+id))
-    _socket.listen(5)
+    _socket.listen(1)
     done[id]=False
     queues[id]=Queue()
     id_=bytes(str(id),'utf-8')+b'#1'
@@ -112,7 +112,7 @@ def client_connect_recv(id):
     # opens a connection with the id_ client for sending
     _socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     _socket.bind((my_ip,my_port_begin+id+1000))
-    _socket.listen(5)
+    _socket.listen(1)
     id_=bytes(str(id),'utf-8')+b'#2'
     while(len(lines)<lim):
         try:
@@ -214,12 +214,12 @@ def recv_from_client(id):
         if line_no not in lines:
             lines[line_no] = response
             logging.warning("client:"+str(len(lines)))
-            logging.warning(id)
             for i in range(1,num_clients+1):
                 if i != id:
                     queues[i].put(response)
     for i in range(1,num_clients+1):
         queues[i].put(b"DONE")
+    clients_send[id].sendall(b"Done")
 
 def get():
     global lines
