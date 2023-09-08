@@ -255,6 +255,9 @@ def get():
                         break
                     if(response_new==b''):
                         break
+    submit()
+    for i in range(1,num_clients+1):
+        queues[i].put(b"DONE")
 
 def parse(data_string):
     global lines
@@ -333,10 +336,7 @@ def main():
         send_threads[i].start()
         recv_threads[i].start()
         
-    while(len(lines)<lim):
-        continue
-
-    submit()
+    get_thread.join()
 
     for i in range(1,num_clients+1):
         send_threads[i].join()
