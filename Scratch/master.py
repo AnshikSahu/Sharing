@@ -3,21 +3,20 @@ import threading
 import logging
 import time
 from queue import Queue
-import sys
 
 clients_send={}
 clients_recv={}
 done={}
 queues={} # queues[id] is the queue for client id
 lines={} 
-lim=1000
+lim=5
 num_clients=1
 active_clients_send=0
 active_clients_recv=0
 
-my_ip='10.194.4.246'
+my_ip='10.194.20.3'
 my_port_begin=8000
-vayu_ip='10.17.7.134'
+vayu_ip='10.17.51.115'
 vayu_port=9801
 vayu_=(vayu_ip,vayu_port)
 
@@ -54,7 +53,6 @@ def client_connect_send(id):
     done[id]=False
     queues[id]=Queue()
     id_=bytes(str(id),'utf-8')+b'#1'
-    socket.setdefaulttimeout(5.0)
     while(not done[id]):
         try:
             conn, addr=_socket.accept()
@@ -76,13 +74,16 @@ def client_connect_send(id):
                     logging.warning("connected to client for send "+str(id))
                     break
                 except:
+                    time.sleep(0.001)
                     continue 
         except:
             try:
                 conn.close()
             except:
                 pass
+            time.sleep(0.001)
             continue
+        time.sleep(0.001)
     clients_send[id].close()
     _socket.close()
 
@@ -142,24 +143,23 @@ def send_to_client(id):
 
     curr_queue = queues[id]
     curr_socket = clients_recv[id]
-    curr_socket.settimeout(0.5)
+    # curr_socket.settimeout(0.5)
     while not done[id]:
         while curr_queue.qsize() > 0:
             msg = curr_queue.get()
             try:
                 curr_socket.sendall(msg)
                 reply = curr_socket.recv(4096)
-                if (msg == b"DONE"):
-                    if (reply == b"DONE"):
+                if (reply == b"DONE"):
                         done[id] = True
                         active_clients -= 1
                         return
-                    else:
-                        if len(reply>=3):
-                            l=(reply[3:]).split(b'\n')[:-1]
-                            for i in l:
-                                curr_queue.put(lines[i])
-                        curr_queue.put(b"DONE")
+                if (msg == b"DONE"):
+                    if len(reply>=3):
+                        l=(reply[3:]).split(b'\n')[:-1]
+                        for i in l:
+                            curr_queue.put(lines[i])
+                    curr_queue.put(b"DONE")
                 elif (reply != b"OK"):
                     curr_queue.put(msg)
             except:
@@ -177,7 +177,16 @@ def recv_from_client(id):
     while len(lines) < lim:
         try:
             socket = clients_send[id]
-            response = socket.recv(4096)
+            response=b''
+            while True:
+                response_new = socket.recv(4096)
+                response+=response_new
+                if(response_new[-1]==10):
+                    break
+                if(response_new==b''):
+                    break
+            if(response[-1]!=10):
+                continue
             index=0
             while (response[index]!=10):
                 index+=1
@@ -190,16 +199,15 @@ def recv_from_client(id):
             for i in range(1,num_clients+1):
                 if i != id:
                     queues[i].put(response)
-            if len(lines) >= lim:
-                for i in range(1,num_clients+1):
-                    queues[i].put(b"DONE")
+    for i in range(1,num_clients+1):
+        queues[i].put(b"DONE")
 
 def get():
     global lines
     global lim
     global vayu_socket
     start = time.time()
-    while (len(lines) != lim):
+    while (len(lines) < lim):
         curr = time.time()
         if (curr - start >= 0.01):
             count = 10
@@ -219,16 +227,17 @@ def get():
                 while True:
                     response_new= vayu_socket.recv(4096)
                     response+=response_new
-                    if response == b'-1\n\n':
+                    if response == b'-1\n-1\n':
                         start=old
                         break
-                    if(response_new==b'' or response_new[-1]==10):
+                    if(response_new[-1]==10):
                         parse_thread=threading.Thread(target=parse,args=(response,))
                         parse_thread.start()
                         break
+                    if(response_new==b''):
+                        break
 
 def parse(data_string):
-    # lines: bit_string -> bit_string (line_no -> line)
     global lines
     global num_clients
     global queues
@@ -239,9 +248,9 @@ def parse(data_string):
         while (data_string[index]!=10):
             index+=1
         line_no=data_string[:index]
+
         if line_no not in lines.keys():
             lines[line_no] = data_string
-            # send_to_client(data_string)
             for i in range(1,num_clients+1):
                 queues[i].put(data_string)
             logging.warning(len(lines))
@@ -255,14 +264,15 @@ def submit():
     for _ in range(10):
         if status == b"SUCCESS":
             break
-        vayu_socket.sendall(b"SUBMIT\nKASHISH@COL334-672\n"+bytes(lim,'utf-8')+b"\n")
+        vayu_socket.sendall(b"SUBMIT\nKASHISH@COL334-672\n"+str(lim).encode('utf-8')+b"\n")
         for i in lines.values():
             vayu_socket.sendall(i)
-        status = vayu_socket.recv(4096).split(b' ')[1]
+        tempstatus = vayu_socket.recv(4096)
+        status = tempstatus.split(b' ')[1]
     if(status==b"SUCCESS:"):
-        print("SUCCESS")
+        print("SUCCESS",tempstatus)
     else:
-        print("FAILED")
+        print("FAILED", tempstatus)
     vayu_socket.close()
 
 def main():
@@ -289,8 +299,7 @@ def main():
     while(active_clients_send<num_clients or active_clients_recv<num_clients):
         time.sleep(0.001)
     logging.warning("connected to all clients")
-    vayu_connect_thread=threading.Thread(target=vayu_connect)
-    vayu_connect_thread.start()
+    vayu_connect()
     logging.warning("connected to vayu")
 
     send_threads={}
