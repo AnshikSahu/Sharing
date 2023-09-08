@@ -1,6 +1,6 @@
 master_ip='10.194.4.246'
 master_port=8000
-vayu_ip='10.17.7.218'
+vayu_ip='10.17.7.134'
 vayu_port=9801
 my_id=1
 
@@ -62,7 +62,7 @@ def client_connect(id,s):
         reply=_socket.recv(4096)
     except:
         reply=b''
-    while(reply!=b"OK" and len(lines)<lim):
+    while(reply!=b"OK" and len(lines)<=lim):
         try:
             _socket.close()
         except:
@@ -85,7 +85,11 @@ def main():
     
     send_socket=client_connect(my_id,b'#1')
     recv_socket=client_connect(my_id,b'#2')
-
+    while True:
+        reply=recv_socket.recv(4096)
+        if reply==b"START":
+            break
+        time.sleep(0.001)
     vayu_connect()
     logging.warning("Connected to all sockets")
     
@@ -197,7 +201,7 @@ def send():
     #     client_connect(my_id,b'#1')
     #     send(response)
     reply=b''
-    while(reply!=b'Done'):
+    while(reply!=b'DONE\n'):
         logging.warning("send thread waiting")
         reply=b''
         response=queue.get()
@@ -206,12 +210,12 @@ def send():
                 send_socket.sendall(response)
                 reply = send_socket.recv(4096)
                 print("reply: ", reply)
-                if reply == b"OK" or reply == b"Done":
+                if reply == b"OK" or reply == b"DONE\n":
                     break
             except Exception as e:
                 print("error: ", e)
                 continue
-        if reply != b"OK" and reply != b"Done":
+        if reply != b"OK" and reply != b"DONE\n":
             client_connect(my_id,b'#1')
             queue.put(response)
 
@@ -240,10 +244,12 @@ def recv():
             if(response[-1]!=10):
                 continue
             try:
-                if (response == b"DONE"):
+                print(len(lines))
+                if (response == b"DONE\n"):
                     if (len(lines) >= lim):
-                        recv_socket.sendall(b"DONE")
-                        break
+                        print("DONE SENT TO MASTER")
+                        recv_socket.sendall(b"DONE\n")
+                        return
                     else:
                         send_message = b"NO\n"
                         for i in range(0,lim):
@@ -268,7 +274,7 @@ def recv():
             client_connect(my_id,b'#2')
     # try:
     #     recv_socket.sendall(b"DONE")
-    # except:
+    # except:f
     #     pass
         
 def submit():
