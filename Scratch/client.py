@@ -23,7 +23,7 @@ global lines
 global recv_status
 recv_status=False
 lines={}
-lim=1000
+lim=10
 
 def vayu_connect():
     global vayu_socket
@@ -202,7 +202,7 @@ def recv():
                         recv_socket.sendall(b"DONE")
                     else:
                         send_message = b"NO\n"
-                        for i in range(1,lim):
+                        for i in range(0,lim):
                             encoded_key = str(i).encode()
                             if encoded_key not in lines.keys():
                                 send_message += encoded_key + b"\n"
