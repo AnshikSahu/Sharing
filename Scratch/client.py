@@ -128,7 +128,7 @@ def get():
                 while True:
                     response_new= vayu_socket.recv(4096)
                     response+=response_new
-                    if response == b'-1\n-1\n':
+                    if response == b'-1\n\n':
                         start=old
                         break
                     if(response_new[-1]==10):
@@ -183,6 +183,7 @@ def recv():
     # recv_socket.settimeout(2)
     while len(lines) < lim:
         try:
+            print(len(lines))
             response=b''
             while True:
                 response_new = recv_socket.recv(4096)
@@ -222,6 +223,7 @@ def recv():
                 print("error1: ", e, response)
         except:
             client_connect(my_id,b'#2')
+    print(len(lines))
     recv_socket.sendall(b"DONE")
         
 def submit():
