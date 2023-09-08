@@ -14,9 +14,12 @@ num_clients=1
 active_clients_send=0
 active_clients_recv=0
 
-my_ip='10.194.20.3'
+global vayutime, vayucount
+vayutime, vayucount = 0,0
+
+my_ip='10.194.4.246'
 my_port_begin=8000
-vayu_ip='10.17.51.115'
+vayu_ip='10.17.7.218'
 vayu_port=9801
 vayu_=(vayu_ip,vayu_port)
 
@@ -225,6 +228,8 @@ def get():
     global lines
     global lim
     global vayu_socket
+    global vayucount
+    global vayutime
     start = time.time()
     while (len(lines) < lim):
         curr = time.time()
@@ -250,14 +255,14 @@ def get():
                         start=old
                         break
                     if(response_new[-1]==10):
+                        vayucount += 1
+                        vayutime += curr-old
                         parse_thread=threading.Thread(target=parse,args=(response,))
                         parse_thread.start()
                         break
                     if(response_new==b''):
                         break
     submit()
-    for i in range(1,num_clients+1):
-        queues[i].put(b"DONE")
 
 def parse(data_string):
     global lines
@@ -282,6 +287,10 @@ def parse(data_string):
 def submit():
     global lines
     global vayu_socket
+    global vayucount, vayutime
+    global active_clients_recv
+    global active_clients_send
+    global done
     status=b'FAILED'
     for _ in range(10):
         if status == b"SUCCESS":
@@ -295,6 +304,11 @@ def submit():
         print("SUCCESS",tempstatus)
     else:
         print("FAILED", tempstatus)
+    print("active clients_send: ", active_clients_send )
+    print("active_clients_recv: ", active_clients_recv)
+    for u in done:
+        print(u, done)
+    print("vayu avg: ", vayutime/vayucount)
     vayu_socket.close()
 
 def main():
@@ -336,7 +350,8 @@ def main():
         send_threads[i].start()
         recv_threads[i].start()
         
-    get_thread.join()
+    # while(len(lines)<lim):
+    #     continue()
 
     for i in range(1,num_clients+1):
         send_threads[i].join()
