@@ -52,8 +52,11 @@ def client_connect(id,s):
     _socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     _socket.connect((master_ip,port))
     _socket.sendall(id_)
-    reply=_socket.recv(4096)
-    while(reply!=b"OK"):
+    try:
+        reply=_socket.recv(4096)
+    except:
+        reply=b''
+    while(reply!=b"OK" and len(lines)<lim):
         try:
             _socket.close()
         except:
@@ -224,7 +227,11 @@ def recv():
         except:
             client_connect(my_id,b'#2')
     print(len(lines))
-    recv_socket.sendall(b"DONE")
+    print('Here')
+    try:
+        recv_socket.sendall(b"DONE")
+    except:
+        pass
         
 def submit():
     global lines
