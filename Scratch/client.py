@@ -1,6 +1,6 @@
 master_ip='10.194.4.246'
 master_port=8000
-vayu_ip='10.17.7.134'
+vayu_ip='10.17.7.218'
 vayu_port=9801
 my_id=1
 
@@ -198,6 +198,7 @@ def send():
     #     send(response)
     reply=b''
     while(reply!=b'Done'):
+        logging.warning("send thread waiting")
         reply=b''
         response=queue.get()
         for _ in range(10):
@@ -225,6 +226,7 @@ def recv():
     global my_id
     # recv_socket.settimeout(2)
     while len(lines) < lim:
+        logging.warning("recv thread waiting")
         try:
             # print(len(lines))
             response=b''
