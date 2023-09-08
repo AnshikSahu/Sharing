@@ -173,8 +173,9 @@ def send(response):
                 return
         except:
             continue
-    client_connect(my_id,b'#1')
-    send(response)
+    if(len(lines)<lim):
+        client_connect(my_id,b'#1')
+        send(response)
 
 def recv():
     # client stores the line in the local dictionary
