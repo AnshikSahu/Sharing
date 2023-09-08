@@ -9,14 +9,14 @@ clients_recv={}
 done={}
 queues={} # queues[id] is the queue for client id
 lines={} 
-lim=5
+lim=100
 num_clients=1
 active_clients_send=0
 active_clients_recv=0
 
-my_ip='10.194.20.3'
+my_ip='10.194.20.195'
 my_port_begin=8000
-vayu_ip='10.17.51.115'
+vayu_ip='10.17.7.134'
 vayu_port=9801
 vayu_=(vayu_ip,vayu_port)
 
@@ -38,7 +38,7 @@ def vayu_connect():
             vayu_socket.sendall(b"SESSION RESET\n")
             reply=vayu_socket.recv(4096)
         except:
-            time.sleep(0.01)
+            time.sleep(0.001)
             continue
 
 def client_connect_send(id):
@@ -54,6 +54,8 @@ def client_connect_send(id):
     queues[id]=Queue()
     id_=bytes(str(id),'utf-8')+b'#1'
     while(not done[id]):
+        print("waiting for client "+str(id))
+        print(done[id])
         try:
             conn, addr=_socket.accept()
             reply=conn.recv(4096)
@@ -151,6 +153,7 @@ def send_to_client(id):
                 curr_socket.sendall(msg)
                 reply = curr_socket.recv(4096)
                 if (reply == b"DONE"):
+                        print("ho gya bro")
                         done[id] = True
                         active_clients -= 1
                         return
@@ -195,7 +198,8 @@ def recv_from_client(id):
             continue
         if line_no not in lines:
             lines[line_no] = response
-            logging.warning(len(lines))
+            logging.warning("client:"+str(len(lines)))
+            logging.warning(id)
             for i in range(1,num_clients+1):
                 if i != id:
                     queues[i].put(response)
@@ -209,7 +213,7 @@ def get():
     start = time.time()
     while (len(lines) < lim):
         curr = time.time()
-        if (curr - start >= 0.01):
+        if (curr - start >= 0.001):
             count = 10
             old = start
             start = time.time()
@@ -227,7 +231,7 @@ def get():
                 while True:
                     response_new= vayu_socket.recv(4096)
                     response+=response_new
-                    if response == b'-1\n-1\n':
+                    if response == b'-1\n\n':
                         start=old
                         break
                     if(response_new[-1]==10):
@@ -253,7 +257,7 @@ def parse(data_string):
             lines[line_no] = data_string
             for i in range(1,num_clients+1):
                 queues[i].put(data_string)
-            logging.warning(len(lines))
+            logging.warning("vayu"+str(len(lines)))
     except Exception as e:
         print("error: ", e)
 
@@ -315,7 +319,7 @@ def main():
         recv_threads[i].start()
         
     while(len(lines)<lim):
-        time.sleep(0.001)
+        continue
 
     submit()
 
