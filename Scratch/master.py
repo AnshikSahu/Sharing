@@ -9,12 +9,12 @@ clients_recv={}
 done={}
 queues={} # queues[id] is the queue for client id
 lines={} 
-lim=1000
+lim=100
 num_clients=1
 active_clients_send=0
 active_clients_recv=0
 
-my_ip='10.194.20.3'
+my_ip='10.194.20.195'
 my_port_begin=8000
 vayu_ip='10.17.7.134'
 vayu_port=9801
@@ -198,7 +198,7 @@ def recv_from_client(id):
             continue
         if line_no not in lines:
             lines[line_no] = response
-            logging.warning(len(lines))
+            logging.warning("client:"+str(len(lines)))
             logging.warning(id)
             for i in range(1,num_clients+1):
                 if i != id:
@@ -257,7 +257,7 @@ def parse(data_string):
             lines[line_no] = data_string
             for i in range(1,num_clients+1):
                 queues[i].put(data_string)
-            logging.warning(len(lines))
+            logging.warning("vayu"+str(len(lines)))
     except Exception as e:
         print("error: ", e)
 
