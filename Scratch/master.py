@@ -328,16 +328,29 @@ def main():
     recv_connect_threads={}
     send_connect_threads={}
     for i in range(1,num_clients+1):
-        send_connect_threads[i]=threading.Thread(target=client_connect_send, args=(i,))
-        recv_connect_threads[i]=threading.Thread(target=client_connect_recv, args=(i,))
-        send_connect_threads[i].start()
-        recv_connect_threads[i].start()
+        try:
+            send_connect_threads[i]=threading.Thread(target=client_connect_send, args=(i,))
+            recv_connect_threads[i]=threading.Thread(target=client_connect_recv, args=(i,))
+            send_connect_threads[i].start()
+            recv_connect_threads[i].start()
+        except:
+            active_clients_recv+=1
+            active_clients_send+=1
+            logging.error("error in connecting to client "+str(i))
     while(active_clients_send<num_clients or active_clients_recv<num_clients):
         time.sleep(0.001)
     logging.warning("connected to all clients")
-    vayu_connect()
-    logging.warning("connected to vayu")
-
+    logging.warning("connecting to vayu")
+    try:
+        vayu_thread=threading.Thread(target=vayu_connect)
+        vayu_thread.start()
+    except:
+        logging.error("error in connecting to vayu")
+    for i in range(1,num_clients+1):
+        try:
+            clients_recv[i].sendall(b"START")
+        except:
+            logging.error("error in sending start to client "+str(i))
     send_threads={}
     recv_threads={}
 
