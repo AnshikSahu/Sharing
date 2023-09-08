@@ -1,6 +1,6 @@
-master_ip='10.194.20.3'
+master_ip='10.194.20.195'
 master_port=8000
-vayu_ip='10.17.6.5'
+vayu_ip='10.17.7.134'
 vayu_port=9801
 my_id=1
 
@@ -23,7 +23,7 @@ global lines
 global recv_status
 recv_status=False
 lines={}
-lim=10
+lim=100
 
 def vayu_connect():
     global vayu_socket
@@ -111,7 +111,7 @@ def get():
     while (len(lines) < lim):
         curr = time.time()
         #function which caters to the rate limit on vayu
-        if (curr - start >= 0.01):
+        if (curr - start >= 0.001):
             count = 10
             #error handling for vayu socket connection
             old = start
@@ -144,6 +144,7 @@ def get():
 def parse(data_string):
     # lines: bit_string -> bit_string (line_no -> line)
     global lines
+    # print("Parsing now", flush = True)
     try:
         line_no=b""
         index=0
@@ -154,10 +155,10 @@ def parse(data_string):
             print("error:" , data_string[index])
             exit()
         line_no=data_string[:index]
-        if line_no not in lines.keys():
+        if line_no not in lines.keys() and len(lines)<lim:
             lines[line_no] = data_string
+            logging.warning('vayu: ' + str(len(lines)))
             send(data_string)
-            logging.warning(len(lines))
     except Exception as e:
         print("error: ", e)
 
@@ -168,11 +169,15 @@ def send(response):
     for _ in range(10):
         try:
             send_socket.sendall(response)
+            print("send completed")
             reply = send_socket.recv(4096)
-            if reply == b'OK':
+            print("reply: ", reply)
+            if reply == b"OK":
                 return
-        except:
+        except Exception as e:
+            print("error: ", e)
             continue
+    print("Not ended")
     if(len(lines)<lim):
         client_connect(my_id,b'#1')
         send(response)
@@ -187,7 +192,7 @@ def recv():
     # recv_socket.settimeout(2)
     while len(lines) < lim:
         try:
-            print(len(lines))
+            # print(len(lines))
             response=b''
             while True:
                 response_new = recv_socket.recv(4096)
@@ -221,7 +226,7 @@ def recv():
                     line_no=response[:index]
                     if line_no not in lines.keys():
                         lines[line_no] = response
-                        logging.warning(len(lines))
+                        logging.warning('master: ' + str(len(lines)))
                     recv_socket.sendall(b"OK")
             except Exception as e:
                 print("error1: ", e, response)
