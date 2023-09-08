@@ -1,6 +1,6 @@
-master_ip='10.194.20.195'
+master_ip='10.194.4.246'
 master_port=8000
-vayu_ip='10.17.51.115'
+vayu_ip='10.17.7.134'
 vayu_port=9801
 my_id=1
 
@@ -8,6 +8,7 @@ import socket
 import threading
 import logging
 import time
+from queue import Queue
 
 global send_socket
 global recv_socket
@@ -27,7 +28,8 @@ global vayutime
 vayutime = 0
 recv_status=False
 lines={}
-lim=10
+lim=1000
+queue=Queue()
 
 def vayu_connect():
     global vayu_socket
@@ -94,20 +96,23 @@ def main():
     recv_thread=threading.Thread(target=recv)
     recv_thread.start()
     logging.warning("recv thread started")
+    send_thread=threading.Thread(target=send)
+    send_thread.start()
+    logging.warning("send thread started")
 
     # wait for threads to finish
-    while(len(lines)<lim):
-        continue
-    
-    submit_thread=threading.Thread(target=submit)
-    submit_thread.start()
-    logging.warning("submit thread started")
-    submit_thread.join()
-
+    recv_thread.join()
+    send_thread.join()
     # close sockets
     vayu_socket.close()
     send_socket.close()
     recv_socket.close()
+    recv_socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    send_socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    recv_socket.connect((master_ip,master_port+my_id+1000))
+    send_socket.connect((master_ip,master_port+my_id))
+    recv_socket.close()
+    send_socket.close()
 
 def get():
     # get lines from vayu 
@@ -148,6 +153,7 @@ def get():
                         break
                     if(response_new==b''):
                         break
+    submit()
 
 def parse(data_string):
     # lines: bit_string -> bit_string (line_no -> line)
@@ -166,29 +172,49 @@ def parse(data_string):
         if line_no not in lines.keys() and len(lines)<lim:
             lines[line_no] = data_string
             logging.warning('vayu: ' + str(len(lines)))
-            send(data_string)
+            queue.put(data_string)
     except Exception as e:
         print("error: ", e)
 
-def send(response):
+def send():
     # this function is called in the parse function where you send a line you received from vayu to the master
     global send_socket
     global my_id
-    for _ in range(10):
-        try:
-            send_socket.sendall(response)
-            print("send completed")
-            reply = send_socket.recv(4096)
-            print("reply: ", reply)
-            if reply == b"OK":
-                return
-        except Exception as e:
-            print("error: ", e)
-            continue
-    print("Not ended")
-    if(len(lines)<lim):
-        client_connect(my_id,b'#1')
-        send(response)
+    global queue
+    # for _ in range(10):
+    #     try:
+    #         send_socket.sendall(response)
+    #         print("send completed")
+    #         reply = send_socket.recv(4096)
+    #         print("reply: ", reply)
+    #         if reply == b"OK":
+    #             return
+    #     except Exception as e:
+    #         print("error: ", e)
+    #         continue
+    # print("Not ended")
+    # if(len(lines)<lim):
+    #     client_connect(my_id,b'#1')
+    #     send(response)
+    reply=b''
+    while(reply!=b'Done'):
+        reply=b''
+        response=queue.get()
+        for _ in range(10):
+            try:
+                send_socket.sendall(response)
+                reply = send_socket.recv(4096)
+                print("reply: ", reply)
+                if reply == b"OK" or reply == b"Done":
+                    break
+            except Exception as e:
+                print("error: ", e)
+                continue
+        if reply != b"OK" and reply != b"Done":
+            client_connect(my_id,b'#1')
+            queue.put(response)
+
+            
 
 def recv():
     # client stores the line in the local dictionary
@@ -213,10 +239,7 @@ def recv():
                 continue
             try:
                 if (response == b"DONE"):
-                    print("i went inside here")
-                    print(len(lines))
                     if (len(lines) >= lim):
-                        print("i went inside")
                         recv_socket.sendall(b"DONE")
                     else:
                         send_message = b"NO\n"
@@ -240,8 +263,6 @@ def recv():
                 print("error1: ", e, response)
         except:
             client_connect(my_id,b'#2')
-    print(len(lines))
-    print('Here')
     try:
         recv_socket.sendall(b"DONE")
     except:
