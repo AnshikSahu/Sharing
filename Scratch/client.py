@@ -225,7 +225,7 @@ def recv():
     global lim
     global my_id
     # recv_socket.settimeout(2)
-    while len(lines) < lim:
+    while len(lines) <= lim:
         logging.warning("recv thread waiting")
         try:
             # print(len(lines))
@@ -243,6 +243,7 @@ def recv():
                 if (response == b"DONE"):
                     if (len(lines) >= lim):
                         recv_socket.sendall(b"DONE")
+                        break
                     else:
                         send_message = b"NO\n"
                         for i in range(0,lim):
@@ -265,10 +266,10 @@ def recv():
                 print("error1: ", e, response)
         except:
             client_connect(my_id,b'#2')
-    try:
-        recv_socket.sendall(b"DONE")
-    except:
-        pass
+    # try:
+    #     recv_socket.sendall(b"DONE")
+    # except:
+    #     pass
         
 def submit():
     global lines
