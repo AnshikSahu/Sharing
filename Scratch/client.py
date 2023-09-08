@@ -1,6 +1,6 @@
 master_ip='10.194.20.195'
 master_port=8000
-vayu_ip='10.17.7.134'
+vayu_ip='10.17.51.115'
 vayu_port=9801
 my_id=1
 
@@ -21,9 +21,13 @@ vayu_socket=None
 
 global lines
 global recv_status
+global vayucount
+vayucount = 0
+global vayutime
+vayutime = 0
 recv_status=False
 lines={}
-lim=100
+lim=10
 
 def vayu_connect():
     global vayu_socket
@@ -107,6 +111,8 @@ def main():
 
 def get():
     # get lines from vayu 
+    global vayucount
+    global vayutime
     start = time.time()
     while (len(lines) < lim):
         curr = time.time()
@@ -135,6 +141,8 @@ def get():
                         start=old
                         break
                     if(response_new[-1]==10):
+                        vayucount += 1
+                        vayutime += curr-old
                         parse_thread=threading.Thread(target=parse,args=(response,))
                         parse_thread.start()
                         break
@@ -255,6 +263,7 @@ def submit():
         print("SUCCESS",tempstatus)
     else:
         print("FAILED",tempstatus)
+    print("vayuavg: " , vayutime/vayucount)
     vayu_socket.close()
 
 if __name__=="__main__":
